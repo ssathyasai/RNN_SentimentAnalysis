@@ -9,6 +9,15 @@ import pickle
 import re
 import string
 import os
+import nltk
+
+# Download NLTK data on first run (needed on Streamlit Cloud)
+try:
+    from nltk.corpus import stopwords
+    stopwords.words("english")
+except LookupError:
+    nltk.download("stopwords", quiet=True)
+    nltk.download("punkt", quiet=True)
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -93,18 +102,19 @@ def load_artifacts():
 
 
 # ── Text preprocessing ────────────────────────────────────────────────────────
+try:
+    from nltk.corpus import stopwords as _sw
+    _STOP_WORDS = set(_sw.words("english"))
+except Exception:
+    _STOP_WORDS = set()
+
+
 def preprocess_text(text: str) -> str:
     """Mirror the preprocessing used during training."""
-    try:
-        from nltk.corpus import stopwords
-        stop_words = set(stopwords.words("english"))
-    except Exception:
-        stop_words = set()
-
     text = str(text).lower()
     text = re.sub(r"\d+", "", text)
     text = text.translate(str.maketrans("", "", string.punctuation))
-    tokens = [w for w in text.split() if w not in stop_words]
+    tokens = [w for w in text.split() if w not in _STOP_WORDS]
     return " ".join(tokens)
 
 
